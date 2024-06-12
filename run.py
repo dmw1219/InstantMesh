@@ -78,6 +78,7 @@ parser.add_argument('--view', type=int, default=6, choices=[4, 6], help='Number 
 parser.add_argument('--no_rembg', action='store_true', help='Do not remove input background.')
 parser.add_argument('--export_texmap', action='store_true', help='Export a mesh with texture map.')
 parser.add_argument('--save_video', action='store_true', help='Save a circular-view video.')
+parser.add_argument('--unet_path', type=str, default="", help='Path to diffusion model unet bin file.')
 args = parser.parse_args()
 seed_everything(args.seed)
 
@@ -109,8 +110,13 @@ pipeline.scheduler = EulerAncestralDiscreteScheduler.from_config(
 print('Loading custom white-background unet ...')
 if os.path.exists(infer_config.unet_path):
     unet_ckpt_path = infer_config.unet_path
+    print(f"use config unet_ckpt_path:{unet_ckpt_path}")
+elif os.path.exists(args.unet_path) and os.path.isfile(args.unet_path):
+    unet_ckpt_path = args.unet_path
+    print(f"use args unet_ckpt_path:{unet_ckpt_path}")
 else:
     unet_ckpt_path = hf_hub_download(repo_id="TencentARC/InstantMesh", filename="diffusion_pytorch_model.bin", repo_type="model")
+    print(f"use huggingface unet_ckpt_path:{unet_ckpt_path}")
 state_dict = torch.load(unet_ckpt_path, map_location='cpu')
 pipeline.unet.load_state_dict(state_dict, strict=True)
 
